@@ -9,5 +9,8 @@ namespace Domain.Contracts
     public interface IRouletteBusiness
     {
         public int CreateRulette(RouletteDto roulette);
+        public int OpenRulette(string id);
+        public RouletteResponse CloseRulette(string id);
+        public RouletteDto GetAllRoulettes();
     }
 }

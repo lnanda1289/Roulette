@@ -6,7 +6,7 @@ namespace Domain.Core
 {
     public class RouletteDto
     {
-        public int Id { get; set; }
+        public string Id { get; set; }
         public bool Open { get; set; }
     }
 }

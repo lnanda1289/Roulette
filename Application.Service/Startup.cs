@@ -27,18 +27,15 @@ namespace Application.Service
 
         public IConfiguration Configuration { get; }
 
-        // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
             services.AddControllers();
             services.AddScoped(typeof(IRouletteCache), typeof(RouletteCache));
             services.AddScoped(typeof(IRouletteBusiness), typeof(RouletteBusiness));
-
             services.AddDistributedRedisCache(option =>
             {
                 option.Configuration = Configuration["RedisCache:ConnectionString"];
             });
-
             services.AddSwaggerGen(c=>
             {
                 c.SwaggerDoc("v1", new OpenApiInfo
@@ -55,7 +52,6 @@ namespace Application.Service
             });
         }
 
-        // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
         {
             if (env.IsDevelopment())
@@ -65,7 +61,6 @@ namespace Application.Service
             app.UseSwagger();
             app.UseSwaggerUI(s =>
             {
-
                 s.SwaggerEndpoint("/swagger/v1/swagger.json", "API Roulette v1.1");
             });
             app.UseHttpsRedirection();
