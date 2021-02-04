@@ -1,10 +1,8 @@
 ﻿using Domain.Contracts;
 using Domain.Core;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 
 namespace Application.Service.Controllers
 {
@@ -22,15 +20,15 @@ namespace Application.Service.Controllers
         [HttpPost]
         [ProducesResponseType(200)]
         [Route("CreateRoulette")]
-        public IActionResult CreateRoulette(RouletteDto roulette)
+        public IActionResult CreateRoulette()
         {
-            return Ok(_rouletteBusiness.CreateRulette(roulette));
+            return Ok(_rouletteBusiness.CreateRulette());
         }
 
         [HttpPost]
         [ProducesResponseType(200)]
         [Route("OpenRoulette")]
-        public IActionResult OpenRoulette(string id)
+        public IActionResult OpenRoulette(int id)
         {
             return Ok(_rouletteBusiness.OpenRulette(id));
         }
@@ -38,7 +36,7 @@ namespace Application.Service.Controllers
         [HttpPost]
         [ProducesResponseType(200)]
         [Route("CloseRoulette")]
-        public IActionResult CloseRoulette(string id)
+        public IActionResult CloseRoulette(int id)
         {
             return Ok(_rouletteBusiness.CloseRulette(id));
         }
@@ -49,6 +47,18 @@ namespace Application.Service.Controllers
         public IActionResult GetAllRoulettes()
         {
             return Ok(_rouletteBusiness.GetAllRoulettes());
+        }
+
+        [HttpPost]
+        [ProducesResponseType(200)]
+        [Route("CreateBet")]
+        public IActionResult CreateBet(BetDto betDto)
+        {
+            if (betDto.Number >= 0 && betDto.Number <= 36 && betDto.Stake <= 10000)
+            {
+                return Ok(_rouletteBusiness.CreateBet(betDto));
+            }
+            return BadRequest();
         }
     }
 }

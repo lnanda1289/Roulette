@@ -20,9 +20,9 @@ namespace Infrastructure.Data
             _configuration = configuration ?? throw new ArgumentException(nameof(configuration));
         }
 
-        public void SetCache<TEntity>(TEntity entity, string cacheKey)
+        public void SetListCache<TEntity>(ICollection<TEntity> list, string cacheKey)
         {
-            string serializeObject = JsonConvert.SerializeObject(entity);
+            string serializeObject = JsonConvert.SerializeObject(list);
             byte[] data = Encoding.UTF8.GetBytes(serializeObject);
             _distributedCache.Set(cacheKey, data, new DistributedCacheEntryOptions()
             {
@@ -30,17 +30,63 @@ namespace Infrastructure.Data
             });
         }
 
-        public TEntity GetCache<TEntity>(string cacheKey)
+        public ICollection<TEntity> GetListCache<TEntity>(string cacheKey)
         {
-            TEntity deserializeObject = default;
+            ICollection<TEntity> deserializeColletion = default;
             var result = _distributedCache.Get(cacheKey);
             if (result != null)
             {
                 var bytesAsString = Encoding.UTF8.GetString(result);
-                deserializeObject = JsonConvert.DeserializeObject<TEntity>(bytesAsString);
+                deserializeColletion = JsonConvert.DeserializeObject<ICollection<TEntity>>(bytesAsString);
             }
-            return deserializeObject;
+            return deserializeColletion;
         }
 
+        public bool AddCache<TEntity>(TEntity entity, string cacheKey)
+        {
+            ICollection<TEntity> cacheColletion = GetListCache<TEntity>(cacheKey);
+            if(cacheColletion == null)
+            {
+                cacheColletion = new List<TEntity>();
+            }
+            cacheColletion.Add(entity);
+            SetListCache<TEntity>(cacheColletion, cacheKey);
+            return true;
+        }
+
+        public int GetIdCache(string cacheIdRouletteKey)
+        {
+            int id = 0;
+            var idcache = GetCache<int>(cacheIdRouletteKey);
+            if(idcache != null)
+            {
+                id = (int)idcache;
+            }
+            id++;
+            SetCache<int>(id, cacheIdRouletteKey);
+            return id;
+        }
+
+        private void SetCache<TEntity>(TEntity entity, string cacheIdRouletteKey)
+        {
+            string serializeObject = JsonConvert.SerializeObject(entity);
+            byte[] data = Encoding.UTF8.GetBytes(serializeObject);
+            _distributedCache.Set(cacheIdRouletteKey, data, new DistributedCacheEntryOptions()
+            {
+                AbsoluteExpiration = DateTimeOffset.Now.AddMinutes(Double.Parse(_configuration["RedisCache:CacheExpiration"]))
+            });
+        }
+
+        private object GetCache<TEntity>(string cacheIdRouletteKey)
+        {
+            object deserialize = default;
+            var result = _distributedCache.Get(cacheIdRouletteKey);
+            if (result != null)
+            {
+                var bytesAsString = Encoding.UTF8.GetString(result);
+                deserialize = JsonConvert.DeserializeObject<TEntity>(bytesAsString);
+            }
+            return deserialize;
+        }
     }
 }
