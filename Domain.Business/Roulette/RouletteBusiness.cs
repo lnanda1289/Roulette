@@ -1,11 +1,9 @@
-﻿using System;
+﻿using Microsoft.Extensions.Configuration;
+using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using Domain.Contracts;
 using Domain.Core;
-using Microsoft.Extensions.Configuration;
 
 namespace Domain.Business
 {
@@ -64,27 +62,40 @@ namespace Domain.Business
 
         private RouletteResponse PlayRoulette(int idRoulette)
         {
-            RouletteResponse rouletteResponse = new RouletteResponse();
-            Random randon = new Random();
-            rouletteResponse.WinNumber = randon.Next(36);
-            rouletteResponse.WinColour = (rouletteResponse.WinNumber % 2) == 0 ? "RED" : "BLACK";
-            rouletteResponse.Winners = GetWiners(rouletteResponse, idRoulette);
-            return rouletteResponse;
+            Roulette roulette = GetRoulette(idRoulette);
+            if (roulette != null)
+            {
+                RouletteResponse rouletteResponse = new RouletteResponse();
+                Random randon = new Random();
+                rouletteResponse.WinNumber = randon.Next(36);
+                rouletteResponse.WinColour = (rouletteResponse.WinNumber % 2) == 0 ? "RED" : "BLACK";
+                rouletteResponse.TotalBets = roulette.Bets.Sum(x => x.Stake);
+                rouletteResponse.Winners = GetWiners(roulette, rouletteResponse);
+                return rouletteResponse;
+            }
+            return null;
         }
 
-        private List<BetDto> GetWiners(RouletteResponse rouletteResponse, int idRoulette)
+        private List<WinnerResponse> GetWiners(Roulette roulette, RouletteResponse rouletteResponse)
         {
-            List<Roulette> roulettes = (List<Roulette>)GetAllRoulettes();
-            if (roulettes != null)
+            List<BetDto> betsWinners = roulette.Bets.Where(y => y.Number == rouletteResponse.WinNumber || y.Colour.Equals(rouletteResponse.WinColour)).ToList<BetDto>();
+            if(betsWinners != null && betsWinners.Count > 0)
             {
-                return (List<BetDto>)roulettes.FirstOrDefault(x => x.Id == idRoulette).Bets.Where(y=>y.Number == rouletteResponse.WinNumber || y.Colour.Equals(rouletteResponse.WinColour));
+                List<WinnerResponse> winners = new List<WinnerResponse>();
+
+                foreach (BetDto bet in betsWinners)
+                {
+                    WinnerResponse winner = new WinnerResponse(bet);
+                    winner.Gain = bet.Number == rouletteResponse.WinNumber ? bet.Stake * 5 : bet.Stake * 1.8;
+                }
+                return winners;
             }
             return null;
         }
 
         public int CreateBet(BetDto betDto)
         {
-            Roulette roulette = GetRoulette(betDto);
+            Roulette roulette = GetRoulette(betDto.IdRoulette);
             if (roulette != null && roulette.Open)
             {
                 betDto.Id = GetId(cacheIdBetKey);
@@ -112,12 +123,12 @@ namespace Domain.Business
             return false;
         }
 
-        private Roulette GetRoulette(BetDto betDto)
+        private Roulette GetRoulette(int IdRoulette)
         {
             List<Roulette> roulettes = (List<Roulette>)GetAllRoulettes();
             if(roulettes != null)
             {
-                return roulettes.FirstOrDefault(x => x.Id == betDto.IdRoulette);
+                return roulettes.FirstOrDefault(x => x.Id == IdRoulette);
             }
             return null;
         }
