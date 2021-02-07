@@ -52,9 +52,9 @@ namespace Application.Service.Controllers
         [HttpPost]
         [ProducesResponseType(200)]
         [Route("CreateBet")]
-        public IActionResult CreateBet(BetDto betDto)
+        public IActionResult CreateBet(BetDto betDto, [FromHeader]int idUser)
         {
-            if (betDto.Number >= 0 && betDto.Number <= 36 && betDto.Stake <= 10000)
+            if (betDto.Number >= 0 && betDto.Number <= 36 && betDto.Stake <= 10000 && idUser >0)
             {
                 return Ok(_rouletteBusiness.CreateBet(betDto));
             }
